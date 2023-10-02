@@ -1,7 +1,6 @@
 module CSS_Builder
 
 export CSS_Code, Bicycle_Code, Unicycle_Code
-
 export Circ2BicycleH, Circ2UnicycleH, AssembleCSS, BicycleSetGen, BicycleSetGenRand, GetCodeTableau, GetXTableau, GetZTableau
 
  function Circ2BicycleH(circ_indices::Array{Int}, n::Int)
