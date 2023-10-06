@@ -1,7 +1,5 @@
 module QECC_Decoders
 
-using QuantumClifford
-
 export create_lookup_table, is_degenerate
 
 using QuantumClifford

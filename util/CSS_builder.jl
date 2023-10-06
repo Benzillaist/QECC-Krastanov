@@ -3,6 +3,18 @@ module CSS_Builder
 export CSS_Code, Bicycle_Code, Unicycle_Code
 export Circ2BicycleH, Circ2UnicycleH, AssembleCSS, BicycleSetGen, BicycleSetGenRand, GetCodeTableau, GetXTableau, GetZTableau
 
+ using QuantumClifford
+ using CairoMakie
+ using QuantumClifford.ECC: faults_matrix, naive_syndrome_circuit, AbstractECC
+ using QuantumClifford.ECC: parity_checks
+ import QuantumClifford.ECC: parity_checks
+
+ struct CSS <: AbstractECC
+    pcm::Stabilizer
+    n::Int
+    d::Int
+ end
+
  function Circ2BicycleH(circ_indices::Array{Int}, n::Int)
     circ_arr = Array{Bool}(undef, n)
     circ_matrix = Matrix{Bool}(undef, n, n)
@@ -62,6 +74,11 @@ end
 
  function AssembleCSS(H::Matrix{Bool})
     return AssembleCSS(H, H)
+ end
+
+ function gf2_to_Stab(c::Matrix{Bool})
+    r, n = size(s)
+    
  end
 
  function BicycleSetGen(N::Int)
@@ -185,5 +202,11 @@ end
  function GetZTableau(ecc::Matrix{Bool})
     return ecc[1:size(ecc)[1], Int(size(ecc)[2]/2) + 1:end]
  end
+
+ parity_checks(c::CSS) = c.pcm
+
+ code_n(c::CSS) = c.n
+
+ distance(c::CSS) = c.d
 
 end
