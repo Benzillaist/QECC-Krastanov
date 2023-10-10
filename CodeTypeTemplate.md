@@ -12,8 +12,9 @@
 ### Code tests
 
 Graphs showing the performance of code (physical vs logical error code)
- - Graph using decoder 1
- - Graph using decoder 2
+Include decoder performance, time to run, etc
+ - Graph using decoder 1 - Table
+ - Graph using decoder 2 - Belief
  - Graph using decoder 3
 
 ## Code Generator
