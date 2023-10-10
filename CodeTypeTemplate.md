@@ -6,12 +6,12 @@
 - Similar to [errorcorrectionzoo](https://errorcorrectionzoo.org/)
 
 ## Code Example
-[Insert image of small example of code]
+[Insert image of a small example of code]
 [File Name](https://Benzillaist.github.com/link_to_code)
 
 ### Code tests
 
-Graphs showing performance of code (physical vs logical error code)
+Graphs showing the performance of code (physical vs logical error code)
  - Graph using decoder 1
  - Graph using decoder 2
  - Graph using decoder 3
@@ -29,7 +29,7 @@ else
 
 ### Code tests
 
-Graphs showing performance of generated code, asuming code is smallish (like N < 1000)
+Graphs showing the performance of generated code, assuming code is smallish (like N < 1000)
  - Graph using decoder 1
  - Graph using decoder 2
  - Graph using decoder 3
@@ -40,9 +40,9 @@ Here are codes that are similar in nature to the [code name]
 
 | Code | Description | 
 | -----------------|----------------|
-| Similar code #1 | Simiular code brief description #1 |
-| Similar code #2 | Simiular code brief description #2 |
-| Similar code #3 | Simiular code brief description #3 |
+| Similar code #1 | Similar code brief description #1 |
+| Similar code #2 | Similar code brief description #2 |
+| Similar code #3 | Similar code brief description #3 |
 
 ## Code References
 
