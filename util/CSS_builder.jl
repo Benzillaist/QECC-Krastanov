@@ -1,13 +1,14 @@
 module CSS_Builder
 
 export CSS_Code, Bicycle_Code, Unicycle_Code
-export Circ2BicycleH, Circ2UnicycleH, AssembleCSS, BicycleSetGen, BicycleSetGenRand, GetCodeTableau, GetXTableau, GetZTableau
+export Circ2BicycleH, Circ2UnicycleH, AssembleCSS, BicycleSetGen, BicycleSetGenRand, GetCodeTableau, GetXTableau, GetZTableau, parity_checks, code_n, distance, BicycleReducer
 
  using QuantumClifford
  using CairoMakie
  using QuantumClifford.ECC: faults_matrix, naive_syndrome_circuit, AbstractECC
  using QuantumClifford.ECC: parity_checks
  import QuantumClifford.ECC: parity_checks
+ using Statistics:std
 
  struct CSS <: AbstractECC
     pcm::Stabilizer
@@ -15,7 +16,22 @@ export Circ2BicycleH, Circ2UnicycleH, AssembleCSS, BicycleSetGen, BicycleSetGenR
     d::Int
  end
 
- function Circ2BicycleH(circ_indices::Array{Int}, n::Int)
+ function BicycleReducer(H0::Matrix{Bool})
+    m, n = size(H0)
+    r_i = 0
+    std_min = Inf
+    for i in 1:m
+        t_H0 = vcat(H0[1:i-1, :], H0[i+1:end, :])
+        std_temp = std(convert(Array, sum(t_H0, dims = 1)))
+        if std_temp < std_min
+            std_min = std_temp
+            r_i = i
+        end
+    end
+    return vcat(vcat(H0[1:r_i-1, :], H0[r_i+1:end, :]))
+ end
+
+ function Circ2BicycleH0(circ_indices::Array{Int}, n::Int)
     circ_arr = Array{Bool}(undef, n)
     circ_matrix = Matrix{Bool}(undef, n, n)
     comp_matrix = Matrix{Bool}(undef, n, 2*n)
@@ -60,16 +76,16 @@ export Circ2BicycleH, Circ2UnicycleH, AssembleCSS, BicycleSetGen, BicycleSetGenR
     return comp_matrix
 end
 
- function AssembleCSS(H::Matrix{Bool}, G::Matrix{Bool})
-    Hy = size(H)[1]
-    Hx = size(H)[2]
-    Gy = size(G)[1]
-    Gx = size(G)[2]
+ function AssembleCSS(H::Matrix{Bool}, G::Matrix{Bool})::CSS
+    Hy, Hx = size(H)
+    Gy, Gx = size(G)
     comp_matrix = fill(false, (Hy + Gy, Hx + Gx))
     # comp_matrix = Matrix{Bool}(undef, Hy + Gy, Hx + Gx)
     comp_matrix[1:Hy, 1:Hx] = H
-    comp_matrix[Hy+1:end, Hx+1:end] = H
-    return comp_matrix
+    comp_matrix[Hy+1:end, Hx+1:end] = G
+    pcm_stab = Stabilizer(fill(0x0, Hy+Gy), GetXTableau(comp_matrix), GetZTableau(comp_matrix))
+    return CSS(pcm_stab, Hx, 3)
+    # return comp_matrix
  end
 
  function AssembleCSS(H::Matrix{Bool})
