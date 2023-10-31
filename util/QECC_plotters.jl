@@ -34,7 +34,7 @@ using QuantumClifford, QuantumClifford.ECC
              decoded += 1
          end
      end
-     return 1 - decoded / samples
+     return (1 - decoded / samples)
  end;
  
  function plot_code_performance(error_rates, post_ec_error_rates; title="")

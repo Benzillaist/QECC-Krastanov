@@ -1,22 +1,24 @@
 module CSS_Builder
 
 export CSS_Code, Bicycle_Code, Unicycle_Code
-export Circ2BicycleH, Circ2UnicycleH, AssembleCSS, BicycleSetGen, BicycleSetGenRand, GetCodeTableau, GetXTableau, GetZTableau, parity_checks, code_n, distance, BicycleReducer
+export Circ2BicycleH0, Circ2UnicycleH, AssembleCSS, BicycleSetGen, BicycleSetGenRand, GetCodeTableau, GetXTableau, GetZTableau, parity_checks, code_n, distance, ReduceBicycle, ReduceUnicycle
 
- using QuantumClifford
- using CairoMakie
+ using QuantumClifford: Stabilizer
  using QuantumClifford.ECC: faults_matrix, naive_syndrome_circuit, AbstractECC
  using QuantumClifford.ECC: parity_checks
  import QuantumClifford.ECC: parity_checks
  using Statistics:std
+ using Nemo: residue_ring, matrix
+ using LinearAlgebra: rank
 
  struct CSS <: AbstractECC
-    pcm::Stabilizer
+    tab::Matrix{Bool}
+    stab::Stabilizer
     n::Int
     d::Int
  end
 
- function BicycleReducer(H0::Matrix{Bool})
+ function ReduceBicycle(H0::Matrix{Bool})
     m, n = size(H0)
     r_i = 0
     std_min = Inf
@@ -28,7 +30,7 @@ export Circ2BicycleH, Circ2UnicycleH, AssembleCSS, BicycleSetGen, BicycleSetGenR
             r_i = i
         end
     end
-    return vcat(vcat(H0[1:r_i-1, :], H0[r_i+1:end, :]))
+    return vcat(H0[1:r_i-1, :], H0[r_i+1:end, :])
  end
 
  function Circ2BicycleH0(circ_indices::Array{Int}, n::Int)
@@ -52,29 +54,50 @@ export Circ2BicycleH, Circ2UnicycleH, AssembleCSS, BicycleSetGen, BicycleSetGenR
     comp_matrix[1:n,n+1:2*n] = transpose(circ_matrix)
     return comp_matrix
  end
+ 
+ function ReduceUnicycle(m::Matrix{Bool})
+     r = LinearAlgebra.rank(nm7)
+     rrzz = Nemo.residue_ring(Nemo.ZZ, 2)
+     for i in 1:size(u7)[1]
+         tm = vcat(m[1:i-1,:], m[i+1:end,:])
+         tr = LinearAlgebra.rank(Nemo.matrix(rrzz, tm))
+         if(tr == r)
+             m = tm
+             i -= 1
+             if(size(m)[1] == r)
+                 break
+             end
+         end
+     end
+     return m
+ end
 
  function Circ2UnicycleH(circ_indices::Array{Int}, n::Int)
-    circ_arr = fill(false, n)
-    one_col = transpose(fill(true, n))
-    circ_matrix = Matrix{Bool}(undef, n, n)
-    comp_matrix = Matrix{Bool}(undef, n, n+1)
-    for i = 1:n
-        if i in circ_indices
-            circ_arr[i] = true
-        else
-            circ_arr[i] = false
-        end
-    end
-    for i = 1:n
-        circ_matrix[i,1:n] = circ_arr
-        li = circ_arr[end]
-        circ_arr[2:end] = circ_arr[1:end-1]
-        circ_arr[1] = li
-    end
-    comp_matrix[1:n,1:n] = circ_matrix
-    comp_matrix[1:n,n+1] = one_col
-    return comp_matrix
-end
+     circ_arr = fill(false, n)
+     one_col = transpose(fill(true, n))
+     circ_matrix = Matrix{Bool}(undef, n, n)
+     comp_matrix = Matrix{Bool}(undef, n, n+1)
+     for i = 1:n
+         if i in circ_indices
+             circ_arr[i] = true
+         else
+             circ_arr[i] = false
+         end
+     end
+     for i = 1:n
+         circ_matrix[i,1:n] = circ_arr
+         li = circ_arr[end]
+         circ_arr[2:end] = circ_arr[1:end-1]
+         circ_arr[1] = li
+     end
+     comp_matrix[1:n,1:n] = circ_matrix
+     comp_matrix[1:n,n+1] = one_col
+     return comp_matrix
+ end
+
+ function UnicycleReducer(comp_matrix::Matrix{Bool})
+     
+ end
 
  function AssembleCSS(H::Matrix{Bool}, G::Matrix{Bool})::CSS
     Hy, Hx = size(H)
@@ -84,17 +107,12 @@ end
     comp_matrix[1:Hy, 1:Hx] = H
     comp_matrix[Hy+1:end, Hx+1:end] = G
     pcm_stab = Stabilizer(fill(0x0, Hy+Gy), GetXTableau(comp_matrix), GetZTableau(comp_matrix))
-    return CSS(pcm_stab, Hx, 3)
+    return CSS(comp_matrix, pcm_stab, Hx, 3)
     # return comp_matrix
  end
 
- function AssembleCSS(H::Matrix{Bool})
+ function AssembleCSS(H::Matrix{Bool})::CSS
     return AssembleCSS(H, H)
- end
-
- function gf2_to_Stab(c::Matrix{Bool})
-    r, n = size(s)
-    
  end
 
  function BicycleSetGen(N::Int)
@@ -219,7 +237,17 @@ end
     return ecc[1:size(ecc)[1], Int(size(ecc)[2]/2) + 1:end]
  end
 
- parity_checks(c::CSS) = c.pcm
+ function GetXTableau(ecc::CSS)
+    return GetXTableau(ecc.tab)
+ end
+
+ function GetZTableau(ecc::CSS)
+    return GetZTableau(ecc.tab)
+ end
+
+ tableau(c::CSS) = c.tab
+
+ parity_checks(c::CSS) = c.stab
 
  code_n(c::CSS) = c.n
 
